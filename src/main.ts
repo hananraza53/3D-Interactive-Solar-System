@@ -45,12 +45,22 @@ const ZOOM_SENSITIVITY = 0.05; // reduced — slow, controlled zoom
 const ZOOM_MIN = 2;
 const ZOOM_MAX = 2000;
 
+// Track mouse NDC — used by click/hover raycasting only
+const mouseNDC = new THREE.Vector2(0, 0);
+window.addEventListener('mousemove', (e: MouseEvent) => {
+  mouseNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouseNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
 window.addEventListener('wheel', (e: WheelEvent) => {
   e.preventDefault();
   // Normalise delta across browsers / trackpads
   const delta = e.deltaY !== 0 ? e.deltaY : -e.deltaX;
   zoomVelocity += delta * ZOOM_SENSITIVITY;
 }, { passive: false });
+
+
+
 
 // ─── DATA TYPES ───────────────────────────────────────────────────────────────
 interface MoonData {
@@ -540,21 +550,22 @@ namedStars.forEach((star) => {
 
 // ─── RAYCASTER / INTERACTION ──────────────────────────────────────────────────
 const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
 let activeTarget: ClickTarget | null = null;
 let activeMesh: THREE.Mesh | null = null;
 let isAnimating = false;
 
+
 function getHitInfo(event: MouseEvent): { mesh: THREE.Mesh; info: ClickTarget } | null {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
+  mouseNDC.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouseNDC.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouseNDC, camera);
   const meshes = allClickableMeshes.map(c => c.mesh);
   const hits = raycaster.intersectObjects(meshes, false);
   if (!hits.length) return null;
   const hit = hits[0].object as THREE.Mesh;
   return allClickableMeshes.find(c => c.mesh === hit) || null;
 }
+
 
 window.addEventListener('click', (event) => {
   if (isAnimating) return;
@@ -567,9 +578,9 @@ window.addEventListener('click', (event) => {
 });
 
 window.addEventListener('mousemove', (event) => {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
+  mouseNDC.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouseNDC.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouseNDC, camera);
   const hits = raycaster.intersectObjects(allClickableMeshes.map(c => c.mesh), false);
   document.body.style.cursor = hits.length > 0 ? 'pointer' : 'default';
 });
@@ -665,19 +676,21 @@ const clock = new THREE.Clock();
 function applyMomentumZoom() {
   if (Math.abs(zoomVelocity) < 0.001) { zoomVelocity = 0; return; }
 
-  // Direction: zoom toward the controls target, not just along camera Z
+  // Direction: zoom toward the controls target
   const direction = new THREE.Vector3();
   direction.subVectors(camera.position, controls.target).normalize();
 
   const currentDist = camera.position.distanceTo(controls.target);
   // Scale speed proportionally to distance for natural feel
-  const scaledStep = zoomVelocity * currentDist * 0.004; // reduced multiplier for slower zoom
+  const scaledStep = zoomVelocity * currentDist * 0.004;
 
   const newDist = THREE.MathUtils.clamp(currentDist + scaledStep, ZOOM_MIN, ZOOM_MAX);
   camera.position.copy(controls.target).addScaledVector(direction, newDist);
 
-  zoomVelocity *= ZOOM_FRICTION; // apply friction each frame
+  zoomVelocity *= ZOOM_FRICTION;
 }
+
+
 
 function animate() {
   requestAnimationFrame(animate);
