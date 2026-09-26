@@ -310,7 +310,7 @@ planetsData.forEach((data) => {
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.x = data.distance;
   mesh.rotation.z = THREE.MathUtils.degToRad(data.tilt);
-  mesh.userData = { type: 'planet', ...data };
+  mesh.userData = { ...data, type: 'planet' };
   orbitGroup.add(mesh);
 
   allClickableMeshes.push({ mesh, info: { type: 'planet', data } });
