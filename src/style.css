@@ -273,3 +273,222 @@ body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,200,80,0.3); border-radius: 4px; }
+
+/* ═══════════════════════════════════════════════════════════
+   LOADER
+   ═══════════════════════════════════════════════════════════ */
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(ellipse at 50% 55%,
+    #040a1e 0%,
+    #010308 60%,
+    #000307 100%
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  transition: opacity 0.7s ease, visibility 0.7s ease;
+}
+
+#loader.loader-done {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* ─── Stars background ───────────────────────────────────── */
+.loader-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.loader-star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  animation: star-twinkle linear infinite;
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.9; }
+  50%       { opacity: 0.15; }
+}
+
+/* ─── Solar orrery ───────────────────────────────────────── */
+.loader-solar {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Orbit rings */
+.orbit-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 200, 80, 0.18);
+  box-shadow: 0 0 8px rgba(255, 180, 40, 0.06);
+}
+
+.orbit-ring-1 {
+  width: 130px;
+  height: 130px;
+}
+
+.orbit-ring-2 {
+  width: 190px;
+  height: 190px;
+}
+
+/* Orbiting planet containers */
+.orbit-planet-1,
+.orbit-planet-2 {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.orbit-planet-1 {
+  width: 130px;
+  height: 130px;
+  animation: orbit-spin 2s linear infinite;
+}
+
+.orbit-planet-2 {
+  width: 190px;
+  height: 190px;
+  animation: orbit-spin 3.5s linear infinite reverse;
+}
+
+@keyframes orbit-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Planet dots */
+.planet-dot {
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  box-shadow: 0 0 10px 3px currentColor;
+}
+
+.dot-1 {
+  width: 10px;
+  height: 10px;
+  background: #4fc3f7;
+  color: rgba(79, 195, 247, 0.6);
+}
+
+.dot-2 {
+  width: 8px;
+  height: 8px;
+  background: #ff8a65;
+  color: rgba(255, 138, 101, 0.6);
+}
+
+/* Sun core */
+.loader-sun {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.sun-glow {
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 210, 80, 0.35) 0%,
+    rgba(255, 160, 20, 0.15) 40%,
+    transparent 70%
+  );
+  animation: sun-pulse 1.8s ease-in-out infinite;
+}
+
+.sun-inner {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 38%,
+    #fff7c0 0%,
+    #ffd040 30%,
+    #ff8c00 65%,
+    #c85000 100%
+  );
+  box-shadow:
+    0 0 24px 8px rgba(255, 160, 0, 0.55),
+    0 0 60px 20px rgba(255, 100, 0, 0.25);
+  animation: sun-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes sun-pulse {
+  0%, 100% { transform: scale(1);   opacity: 1;    }
+  50%       { transform: scale(1.1); opacity: 0.85; }
+}
+
+/* ─── Text ───────────────────────────────────────────────── */
+.loader-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loader-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 0%, #ffd580 40%, #ff8c00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(255, 160, 0, 0.4));
+}
+
+.loader-sub {
+  font-size: 0.82rem;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 220, 120, 0.5);
+  animation: loader-sub-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes loader-sub-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* ─── Progress bar ───────────────────────────────────────── */
+.loader-bar-wrap {
+  width: min(320px, 70vw);
+  height: 3px;
+  background: rgba(255, 200, 80, 0.1);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.loader-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #ff8c00, #ffd580, #ffffff);
+  box-shadow: 0 0 12px rgba(255, 200, 80, 0.7);
+  transition: width 0.05s linear;
+}
+

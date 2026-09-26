@@ -1,15 +1,299 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="An interactive 3D solar system simulation — click any planet to explore it up close." />
+  <meta name="description"
+    content="An interactive 3D solar system simulation — click any planet to explore it up close." />
   <title>Solar System — Interactive 3D Simulation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;600;700;900&family=Space+Grotesk:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;600;700;900&family=Space+Grotesk:wght@300;400;700&display=swap"
+    rel="stylesheet" />
+  <!-- Critical: inline loader styles so no FOUC before Vite CSS loads -->
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      overflow: hidden;
+      background: #000307;
+      font-family: 'Outfit', sans-serif;
+      color: #fff;
+      user-select: none;
+    }
+
+    /* Hide the main UI overlay until the loader is gone */
+    .overlay {
+      visibility: hidden;
+    }
+
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: radial-gradient(ellipse at 50% 55%, #040a1e 0%, #010308 60%, #000307 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2.5rem;
+      transition: opacity 0.7s ease, visibility 0.7s ease;
+    }
+
+    #loader.loader-done {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #loader.loader-done~* .overlay,
+    #loader.loader-done+* {
+      visibility: visible;
+    }
+
+    .loader-solar {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .orbit-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 200, 80, 0.18);
+    }
+
+    .orbit-ring-1 {
+      width: 130px;
+      height: 130px;
+    }
+
+    .orbit-ring-2 {
+      width: 190px;
+      height: 190px;
+    }
+
+    .orbit-planet-1,
+    .orbit-planet-2 {
+      position: absolute;
+      border-radius: 50%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .orbit-planet-1 {
+      width: 130px;
+      height: 130px;
+      animation: orbit-spin 2s linear infinite;
+    }
+
+    .orbit-planet-2 {
+      width: 190px;
+      height: 190px;
+      animation: orbit-spin 3.5s linear infinite reverse;
+    }
+
+    @keyframes orbit-spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .planet-dot {
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+    }
+
+    .dot-1 {
+      width: 10px;
+      height: 10px;
+      background: #4fc3f7;
+      box-shadow: 0 0 10px 3px rgba(79, 195, 247, .6);
+    }
+
+    .dot-2 {
+      width: 8px;
+      height: 8px;
+      background: #ff8a65;
+      box-shadow: 0 0 10px 3px rgba(255, 138, 101, .6);
+    }
+
+    .loader-sun {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .sun-glow {
+      position: absolute;
+      inset: -18px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 210, 80, .35) 0%, rgba(255, 160, 20, .15) 40%, transparent 70%);
+      animation: sun-pulse 1.8s ease-in-out infinite;
+    }
+
+    .sun-inner {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%, #fff7c0 0%, #ffd040 30%, #ff8c00 65%, #c85000 100%);
+      box-shadow: 0 0 24px 8px rgba(255, 160, 0, .55), 0 0 60px 20px rgba(255, 100, 0, .25);
+      animation: sun-pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes sun-pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.1);
+        opacity: 0.85;
+      }
+    }
+
+    .loader-stars {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .loader-star {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: star-twinkle linear infinite;
+    }
+
+    @keyframes star-twinkle {
+
+      0%,
+      100% {
+        opacity: .9;
+      }
+
+      50% {
+        opacity: .15;
+      }
+    }
+
+    .loader-text {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .loader-title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -.02em;
+      background: linear-gradient(135deg, #fff 0%, #ffd580 40%, #ff8c00 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 20px rgba(255, 160, 0, .4));
+    }
+
+    .loader-sub {
+      font-size: .82rem;
+      font-weight: 300;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      color: rgba(255, 220, 120, .5);
+      animation: loader-sub-blink 1.4s ease-in-out infinite;
+    }
+
+    @keyframes loader-sub-blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .35;
+      }
+    }
+
+    .loader-bar-wrap {
+      width: min(320px, 70vw);
+      height: 3px;
+      background: rgba(255, 200, 80, .1);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .loader-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, #ff8c00, #ffd580, #fff);
+      box-shadow: 0 0 12px rgba(255, 200, 80, .7);
+    }
+  </style>
 </head>
+
 <body>
+
+  <!-- ─── LOADER ─────────────────────────────────────────── -->
+  <div id="loader">
+    <div class="loader-stars" id="loader-stars"></div>
+
+    <div class="loader-solar">
+      <!-- Outer orbit ring -->
+      <div class="orbit-ring orbit-ring-1"></div>
+      <div class="orbit-ring orbit-ring-2"></div>
+
+      <!-- Orbiting planet dot -->
+      <div class="orbit-planet-1">
+        <div class="planet-dot dot-1"></div>
+      </div>
+      <div class="orbit-planet-2">
+        <div class="planet-dot dot-2"></div>
+      </div>
+
+      <!-- Sun core -->
+      <div class="loader-sun">
+        <div class="sun-glow"></div>
+        <div class="sun-inner"></div>
+      </div>
+    </div>
+
+    <div class="loader-text">
+      <span class="loader-title">Solar System</span>
+      <span class="loader-sub">Initialising simulation…</span>
+    </div>
+
+    <div class="loader-bar-wrap">
+      <div class="loader-bar" id="loader-bar"></div>
+    </div>
+  </div>
 
   <!-- Three.js canvas mount -->
   <div id="app"></div>
@@ -87,6 +371,48 @@
       });
       window.dispatchEvent(evt);
     });
+
+    // ─── LOADER ───────────────────────────────────────────────
+    (function () {
+      // Seed random stars
+      const container = document.getElementById('loader-stars');
+      for (let i = 0; i < 120; i++) {
+        const s = document.createElement('div');
+        s.className = 'loader-star';
+        s.style.cssText = [
+          'left:' + (Math.random() * 100) + '%',
+          'top:' + (Math.random() * 100) + '%',
+          'width:' + (Math.random() * 2.5 + 0.5) + 'px',
+          'height:' + (Math.random() * 2.5 + 0.5) + 'px',
+          'animation-delay:' + (Math.random() * 3) + 's',
+          'animation-duration:' + (Math.random() * 2 + 1.5) + 's'
+        ].join(';');
+        container.appendChild(s);
+      }
+
+      // Animate the progress bar over 3 s
+      const bar = document.getElementById('loader-bar');
+      const loader = document.getElementById('loader');
+      const DURATION = 3000;
+      const start = performance.now();
+
+      function tick(now) {
+        const pct = Math.min((now - start) / DURATION * 100, 100);
+        bar.style.width = pct + '%';
+        if (pct < 100) {
+          requestAnimationFrame(tick);
+        } else {
+          // Fade out loader, then reveal the main UI overlay
+          loader.classList.add('loader-done');
+          setTimeout(() => {
+            loader.style.display = 'none';
+            document.querySelector('.overlay').style.visibility = 'visible';
+          }, 700);
+        }
+      }
+      requestAnimationFrame(tick);
+    })();
   </script>
 </body>
+
 </html>
